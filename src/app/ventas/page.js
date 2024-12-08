@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div>
+    <div className="relative h-[calc(100vh-5rem)]">
         <div class="flex rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
             <input type="email" placeholder="Buscar producto..."
             class="w-full outline-none bg-white text-gray-600 text-sm px-3 py-2" />
@@ -263,7 +263,7 @@ export default function Home() {
                 </tbody>
             </table>
         </div>
-        <div className="border-t px-4 py-3 flex gap-2 h-15">
+        <div className="border-t px-4 py-3 w-full bottom-0 flex gap-2 h-15 absolute">
             <div className="space-y-2">
                 <p className="font-bold">Cliente</p>
                 <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="DNI"/><br/>
