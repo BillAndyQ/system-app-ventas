@@ -15,7 +15,7 @@ export default function Home() {
             </button>
         </div>
         {/* Tabla  */}
-        <div class="font-[sans-serif] overflow-x-auto h-full my-3 mx-3">
+        <div class="font-[sans-serif] overflow-x-auto  my-3 mx-3">
             <table class="min-w-full bg-white border">
                 <thead class="bg-gray-800 whitespace-nowrap">
                 <tr>
