@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
             <div className="border-b h-14 flex items-center">
               <p className="ps-4 font-bold">Andy QM / Ferreteria S.A.C</p>
             </div>
-            <div className="flex flex-col gap-2 px-3">
+            <div className="flex flex-col gap-2">
               {children}
             </div>
           </div>
