@@ -18,10 +18,11 @@ export const metadata = {
   title: "Ventas",
   description: "Ventas",
 };
+
 const options_nav = (
   <>
-    <div className="bg-gray-100 rounded"><p className="ps-4 py-1 text-sm font-bold">Punto de venta</p></div>
-    <div className="rounded"><p className="ps-4 py-1 text-sm">Reporte de ventas</p></div>
+    <div className="bg-gray-100 rounded"><p className="ps-4 py-1 text-sm font-bold text-black">Lista de productos</p></div>
+    <div className="rounded"><p className="ps-4 py-1 text-sm text-black">Reporte de inventario</p></div>
   </>
 )
 
@@ -31,7 +32,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar options_nav={options_nav} title="Ventas">
+        <Navbar options_nav={options_nav} title={"Inventario"}>
         { children}
         </Navbar>
       </body>
