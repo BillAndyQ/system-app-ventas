@@ -1,14 +1,31 @@
 "use client"
-import { jsPDF } from "jspdf";
+import Link from "next/link";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function Home() {
-    const generarPDF = () => {
-        const doc = new jsPDF();
-        doc.text("Hola, este es un PDF generado con jsPDF", 10, 10);
-        doc.text("Hola, este es un PDF generado con jsPDF", 10, 20);
-        doc.text("Hola, este es un PDF generado con jsPDF", 10, 30);
-        doc.save("ejemplo.pdf"); // Esto descarga el PDF
-    };
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+  
+    useEffect(() => {
+      // Función para obtener datos de la API externa
+      const fetchData = async () => {
+        try {
+          const response = await axios.get('https://app-ventas-latest.onrender.com/producto/traer');
+          setData(response.data); // Actualizamos el estado con los datos obtenidos
+        } catch (err) {
+          setError('Error al obtener los datos');
+        } finally {
+          setLoading(false); // Quitamos el estado de carga
+        }
+      };
+  
+      fetchData();
+    }, []);
+  
+    if (loading) return <p>Cargando datos...</p>;
+    if (error) return <p>{error}</p>;
 
   return (
     <div className="relative h-[calc(100vh-5rem)]">
@@ -24,8 +41,17 @@ export default function Home() {
                 </svg>
                 </button>
             </div>
-            <button className="items-center justify-center bg-[#007bff] px-5 text-sm text-white rounded-md">Agregar producto</button>
+            <Link href="/inventario/nuevoProducto">
+                <button className="items-center justify-center bg-[#007bff] px-5 py-2 text-sm text-white rounded-md">Agregar producto</button>
+            </Link>
         </div>
+        <ul>
+        {data.map((post) => (
+          <li key={post.id}>
+            <strong>{post.title}</strong>: {post.body}
+          </li>
+        ))}
+      </ul>
         {/* Tabla  */}
         <div className="font-[sans-serif] overflow-x-auto my-3 mx-3 overflow-y-auto h-[calc(100vh-19rem)]">
             <table className="min-w-full bg-white border">
@@ -208,25 +234,7 @@ export default function Home() {
             </table>
         </div>
         <div className="border-t px-4 py-3 bg-white w-full bottom-0 flex gap-2 h-40 absolute">
-            <div className="space-y-2">
-                <p className="font-bold">Cliente</p>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="DNI"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Nombres"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Apellidos"/><br/>
-            </div>
-
-            <div className="space-y-2">
-                <p className="font-bold">Detalles</p>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="DNI"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Nombres"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Apellidos"/><br/>
-            </div>
-            <div className="ms-auto">
-                <p className="font-bold">IGV</p>
-                <p className="font-bold">Subtotal</p>
-                <p className="font-bold">Total</p>
-                <button onClick={generarPDF} className="bg-blue-500 mt-3 text-white px-4 py-3 text-md">Realizar operación</button>
-            </div>
+            
         </div>
     </div>
   );
