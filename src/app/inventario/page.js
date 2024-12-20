@@ -12,11 +12,12 @@ export default function Home() {
       // Función para obtener datos de la API externa
       const fetchData = async () => {
         try {
-            const response = await axios.get('https://app-ventas-latest.onrender.com/producto/traer', {
+            const response = await axios.get('https://ventas2024-production.up.railway.app/producto/traer', {
                 headers: {
                     'Content-Type': 'application/json',  // Especifica que estamos enviando JSON
                     'Accept': 'application/json'        // Esperamos una respuesta JSON
-                  }
+                  },
+                    withCredentials: true
               });
           setData(response.data); // Actualizamos el estado con los datos obtenidos
         } catch (err) {
