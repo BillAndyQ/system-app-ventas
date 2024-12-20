@@ -16,8 +16,7 @@ export default function Home() {
                 headers: {
                     'Content-Type': 'application/json',  // Especifica que estamos enviando JSON
                     'Accept': 'application/json'        // Esperamos una respuesta JSON
-                  },
-                    withCredentials: true
+                  }
               });
           setData(response.data); // Actualizamos el estado con los datos obtenidos
         } catch (err) {
