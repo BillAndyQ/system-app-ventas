@@ -1,0 +1,42 @@
+// src/app/api/producto/traer/route.js
+
+export async function POST(req) {
+    try {
+        const requestData = await req.json();
+        
+        const apiResponse = await fetch('https://ventas2024-production.up.railway.app/producto/crear', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData),
+        });
+  
+        const contentType = apiResponse.headers.get("content-type");
+        let data;
+        
+        if (contentType && contentType.includes("application/json")) {
+            data = await apiResponse.json();
+        } else {
+            data = { 
+                message: await apiResponse.text(),
+                success: apiResponse.ok 
+            };
+        }
+        
+        return new Response(JSON.stringify(data), {
+            status: apiResponse.status,
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+    } catch (error) {
+        return new Response(
+            JSON.stringify({ 
+                error: 'Error al procesar la solicitud',
+                success: false 
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+}
+  
