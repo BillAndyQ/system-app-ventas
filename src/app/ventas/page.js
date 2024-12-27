@@ -17,7 +17,7 @@ export default function Home() {
     <div className="relative h-[calc(100vh-5rem)]">
         <div className="flex rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
             <input type="email" placeholder="Buscar producto..."
-            className="w-full outline-none bg-white text-gray-600 text-sm px-3 py-2" />
+            className="w-full border-none outline-none bg-white text-gray-600 text-sm px-3 py-2" />
             <button type='button' className="flex items-center justify-center bg-[#007bff] px-5">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" width="16px" className="fill-white">
                 <path

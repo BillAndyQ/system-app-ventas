@@ -1,10 +1,11 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use  } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-export default function Home() {
+export default function EditarProducto({params}) {
   const router = useRouter();
+  const { id } = use(params);
   
   const [text, setText] = useState('');
   const [qrCode, setQrCode] = useState('');
@@ -18,7 +19,8 @@ export default function Home() {
   const [dataCategoria, setDataCategoria] = useState([]);
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [idEmpresa, setIdEmpresa] = useState(null);
+  
   // Cargar categorias
   useEffect(() => {
     // Función para obtener datos de la API externa
@@ -41,6 +43,22 @@ export default function Home() {
 
     fetchData();
   }, []);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get(`/api/producto/${id}`);
+      
+      setNombreProduct(response.data.nombre);
+      setDescripcion(response.data.descripcion);
+      setPrecio(response.data.precio);
+      setStock(response.data.stock);
+      setIdCategoria(response.data.categoria.idCategoria);
+      setIdEmpresa(response.data.idEmpresa);
+
+    };
+    fetchData();
+  }, [id]);
 
   const generateQRCode = async () => {
     try {
@@ -86,15 +104,14 @@ export default function Home() {
         return;
       }
 
-      const response = await fetch('/api/producto/crear', {
-        method: 'POST',
+      const response = await fetch('/api/producto/editar', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "empresa": {
-            "idEmpresa": 1
-          },
+          "idProducto": id,
+          "idEmpresa": idEmpresa,
           "categoria": {
             "idCategoria": idCategoria
           },
@@ -144,7 +161,7 @@ export default function Home() {
   return (
     <div className="relative px-4 h-[calc(100vh-5rem)]">
         <div className="flex w-full ">
-            <p className="text-lg font-bold">Nuevo producto</p>
+            <p className="text-lg font-bold">Editar producto</p>
         </div>
 
         <p className="text-sm mt-3 mb-1 text-gray-700">Nombre del producto</p>
@@ -186,6 +203,7 @@ export default function Home() {
         <p className="text-sm mt-2 mb-1 text-gray-700">Categoría</p>
         <div className="w-full max-w-md">
             <div className="relative">
+              {/* Eliminar el estilo de la flecha */}
                 <select
                     value={idCategoria}
                     onChange={(e) => setIdCategoria(e.target.value)}
@@ -200,7 +218,9 @@ export default function Home() {
                             </option>
                         ))
                     )}
+
                 </select>
+                
             </div>
         </div>
 
@@ -225,7 +245,7 @@ export default function Home() {
         disabled={isSubmitting}
         className="items-center justify-center bg-blue-500 px-5 py-2 mt-3 text-sm text-white rounded-sm disabled:opacity-50"
       >
-        {isSubmitting ? 'Registrando...' : 'Registrar'}
+        {isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
       </button>
       {error && (
         <div className="text-red-500 text-sm mt-2">
@@ -242,6 +262,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      
     </div>
   );
 }

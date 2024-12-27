@@ -1,4 +1,3 @@
-// src/app/api/producto/traer/route.js
 
 export async function POST(req) {
     try {
