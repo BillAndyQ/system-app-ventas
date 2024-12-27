@@ -92,9 +92,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "empresa": {
-            "idEmpresa": 1
-          },
+          "idEmpresa": 1,
           "categoria": {
             "idCategoria": idCategoria
           },
