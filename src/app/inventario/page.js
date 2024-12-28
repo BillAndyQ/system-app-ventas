@@ -14,7 +14,6 @@ export default function Home() {
     const [dataCategoria, setDataCategoria] = useState([]);
     const [idCategoria, setIdCategoria] = useState('');
 
-
     const inputRef = useRef(null);
 
         // Cargar categorias

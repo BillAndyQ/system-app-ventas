@@ -2,16 +2,22 @@
 import { jsPDF } from "jspdf";
 import { useEffect, useState, useRef  } from "react";
 import axios from "axios";
-        
+import debounce from 'lodash.debounce';
 
 export default function Home() {
     const inputRef = useRef(null);
     const [search, setSearch] = useState('');
     const [error, setError] = useState('');
     const [data, setData] = useState([]);
-  const [dataCategoria, setDataCategoria] = useState([]);
-
+    const [dataCategoria, setDataCategoria] = useState([]);
+    const [dniRuc, setDniRuc] = useState('');
+    const [clientData, setClientData] = useState(null);
+    const [nombre, setNombre] = useState('');
+    const [selectValue, setSelectValue] = useState('');
+    const [showResults, setShowResults] = useState(false);
+    const resultsRef = useRef(null);
     
+
     const generarPDF = () => {
         const doc = new jsPDF();
         doc.text("Hola, este es un PDF generado con jsPDF", 10, 10);
@@ -22,7 +28,25 @@ export default function Home() {
 
     const getValueSearch = () => {
         setSearch(inputRef.current.value);
+        setShowResults(true);
     }
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                resultsRef.current &&
+                !resultsRef.current.contains(event.target) &&
+                !inputRef.current.contains(event.target)
+            ) {
+                setShowResults(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,7 +61,6 @@ export default function Home() {
               }
             );
             setData(response.data);
-            console.log(response.data);
             
           } catch (err) {
             setError('Error al obtener los datos');
@@ -47,13 +70,77 @@ export default function Home() {
         fetchData();
       }, [search]);
 
+    const handleDniRucChange = (e) => {
+        const value = e.target.value;
+        setDniRuc(value);
+        debouncedFetchData(value);
+    };
+
+    const fetchData = async (value) => {
+        if (value.length === 11) {
+            try {
+                const response = await axios.get(`https://consultaruc.win/api/ruc/${value}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.data && response.data.result && response.data.result.razon_social) {
+                    setClientData(response.data);
+                    setNombre(response.data.result.razon_social);
+                    setSelectValue('factura');
+                } else {
+                    setNombre("");
+                    setError('No se encontró la razón social para el DNI/RUC proporcionado');
+                }
+            } catch (err) {
+                setError('Error al obtener los datos del cliente');
+            }
+        } else if (value.length === 8) {
+            const url = "https://search-name-client.vercel.app/consulta_dni";
+            const data = JSON.stringify({ dni: value });
+            try {
+                const response = await axios.post(url, data, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                setNombre(response.data.nombre);
+                // Handle the response here
+            } catch (err) {
+                setError('Error al obtener los datos del cliente');
+            }
+        }
+    };
+
+    const debouncedFetchData = useRef(debounce((value) => {
+        fetchData(value);
+    }, 1000)).current;
+
+    useEffect(() => {
+        return () => {
+            debouncedFetchData.cancel();
+        };
+    }, [debouncedFetchData]);
 
   return (
     <div className="relative h-[calc(100vh-5rem)]">
         <div className="flex relative rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
 
             <input ref={inputRef} type="text" placeholder="Buscar producto..."
-            className="w-full border-none outline-none bg-white text-gray-600 text-sm px-3 py-2" />
+            className="w-full border-none outline-none bg-white text-gray-600 text-sm px-3 py-2" 
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    getValueSearch();
+                }
+            }}
+            onFocus={() => {
+                if (data.length > 0) {
+                    setShowResults(true);
+                }
+            }}
+            />
 
             <button onClick={getValueSearch} type='button' className="flex items-center justify-center bg-[#007bff] px-5">
 
@@ -65,11 +152,19 @@ export default function Home() {
             </button> 
         </div>
         <div className="relative mx-3">
-            <div className="absolute bg-white w-full max-w-md z-20 h-30 left-0 top-[0.1rem] shadow-md overflow-y-auto border top-4 border-gray-300">
-                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
-                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
-                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
-            </div>
+            {/* Resultados de la busqueda */}
+            {showResults && data.length > 0 && (
+                    <div
+                        ref={resultsRef}
+                        className="absolute bg-white w-full max-w-md z-20 h-30 left-0 top-[0.1rem] shadow-md overflow-y-auto border top-4 border-gray-300"
+                    >
+                        {data.map((item, index) => (
+                            <div key={index} className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">
+                                {item.nombre}
+                            </div>
+                        ))}
+                    </div>
+                )}
         </div>
         {/* Tabla  */}
         <div className="font-[sans-serif] overflow-x-auto my-3 mx-3 overflow-y-auto h-[calc(100vh-19rem)]">
@@ -139,16 +234,37 @@ export default function Home() {
         <div className="border-t px-4 py-3 bg-white w-full bottom-0 flex gap-2 h-40 absolute">
             <div className="space-y-2">
                 <p className="font-bold text-black">Cliente</p>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="DNI"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Nombres"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Apellidos"/><br/>
+                <input
+                        className="border border-gray-300 w-[21rem] rounded px-2 text-sm py-1"
+                        type="text"
+                        placeholder="DNI / RUC"
+                        value={dniRuc}
+                        onChange={handleDniRucChange}
+                        maxLength={11}
+                    /><br />
+                <input
+                        className="border border-gray-300 w-[21rem] rounded px-2 text-sm py-1"
+                        type="text"
+                        placeholder="Nombres"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                    /><br />
             </div>
 
             <div className="space-y-2">
                 <p className="font-bold text-black">Detalles</p>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="DNI"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Nombres"/><br/>
-                <input className="border border-gray-300 rounded px-2 text-sm py-1" type="text" placeholder="Apellidos"/><br/>
+                <select value={selectValue} onChange={(e) => setSelectValue(e.target.value)}
+                    className="bg-transparent placeholder:text-slate-400 text-slate-700 w-[10rem] text-sm border border-gray-300 rounded px-2 py-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer"
+                    >
+                    <option value="factura">Factura</option>
+                    <option value="boleta">Boleta</option>
+                </select>
+                <br/>
+                <select
+                    className="bg-transparent placeholder:text-slate-400 text-slate-700 w-[10rem] text-sm border border-gray-300 rounded px-2 py-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer">
+                    <option value="">Efectivo</option>
+                    <option value="">Tarjeta</option>
+                </select><br/>
             </div>
             <div className="ms-auto">
                 <p className="font-bold">IGV</p>

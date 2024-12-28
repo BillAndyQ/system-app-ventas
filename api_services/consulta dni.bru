@@ -1,0 +1,17 @@
+meta {
+  name: consulta dni
+  type: http
+  seq: 8
+}
+
+post {
+  url: search-name-client.vercel.app/consulta_dni
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "dni" : "76529706"
+  }
+}
