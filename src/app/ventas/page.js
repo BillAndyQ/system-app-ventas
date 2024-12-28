@@ -11,6 +11,7 @@ export default function Home() {
     const [error, setError] = useState('');
     const [data, setData] = useState([]);
     const [dataCategoria, setDataCategoria] = useState([]);
+    const [lastSearch, setLastSearch] = useState('');
     const [dniRuc, setDniRuc] = useState('');
     const [clientData, setClientData] = useState(null);
     const [nombre, setNombre] = useState('');
@@ -27,9 +28,13 @@ export default function Home() {
     }, []);
 
     const getValueSearch = useCallback(() => {
-        setSearch(inputRef.current.value);
-        setShowResults(true);
-    }, []);
+        const currentValue = inputRef.current.value.trim();
+        if (currentValue.length >= 2 && currentValue !== lastSearch) { // Verificar si el valor tiene al menos  caracteres y ha cambiado
+            setSearch(currentValue);
+            setLastSearch(currentValue); // Actualizar la última búsqueda
+            setShowResults(true);
+        }
+    }, [lastSearch]);
 
     const handleResultClick = useCallback((item) => {
         setShowResults(false);
@@ -38,11 +43,11 @@ export default function Home() {
             if (existingItem) {
                 return prevData.map(dataItem =>
                     dataItem.idProducto === item.idProducto
-                        ? { ...dataItem, cantidad: dataItem.cantidad + 1 }
+                        ? { ...dataItem, cantidad: dataItem.cantidad + 1, importe: (dataItem.cantidad + 1) * dataItem.precio }
                         : dataItem
                 );
             } else {
-                return [...prevData, { ...item, cantidad: 1 }];
+                return [...prevData, { ...item, cantidad: 1, importe: item.precio }];
             }
         });
     }, []);
@@ -50,7 +55,7 @@ export default function Home() {
     const handleCantidadChange = (idProducto, newCantidad) => {
         setTableData((prevData) =>
             prevData.map((item) =>
-                item.idProducto === idProducto ? { ...item, cantidad: newCantidad } : item
+                item.idProducto === idProducto ? { ...item, cantidad: newCantidad, importe: newCantidad * item.precio } : item
             )
         );
     };
@@ -234,7 +239,7 @@ export default function Home() {
                                     min={1}
                                 />
                             </td>
-                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">1000</td>
+                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.importe}</td>
 
                             <td className="px-2 whitespace-nowrap text-end text-sm font-medium">
                                 <button type="button" className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800 disabled:opacity-50 disabled:pointer-events-none">Delete</button>
