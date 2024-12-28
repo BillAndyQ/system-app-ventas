@@ -11,7 +11,34 @@ export default function Home() {
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [productoAEliminar, setProductoAEliminar] = useState(null);
+    const [dataCategoria, setDataCategoria] = useState([]);
+    const [idCategoria, setIdCategoria] = useState('');
+
+
     const inputRef = useRef(null);
+
+        // Cargar categorias
+    useEffect(() => {
+        // Función para obtener datos de la API externa
+        const fetchData = async () => {
+        try {
+            const response = await axios.get('/api/categoria/traer', {
+                headers: {
+                    'Content-Type': 'application/json',  // Especifica que estamos enviando JSON
+                    'Accept': 'application/json'        // Esperamos una respuesta JSON
+                    }
+                });
+            setDataCategoria(response.data); // Actualizamos el estado con los datos obtenidos
+            
+        } catch (err) {
+            setError('Error al obtener los datos');
+        } finally {
+            setLoading(false); // Quitamos el estado de carga
+        }
+        };
+
+        fetchData();
+    }, []);
 
     const getValueSearch = () => {
         setSearch(inputRef.current.value);
@@ -93,9 +120,9 @@ export default function Home() {
 
   return (
     <div className="relative h-[calc(100vh-5rem)]">
-        <div className="flex w-full">
-            <div className="flex rounded-md border border-gray-300 overflow-hidden mx-3 w-1/2 max-w-md font-[sans-serif]">
-                <input ref={inputRef} type="email" placeholder="Buscar producto..."
+        <div className="flex w-full items-center gap-2 px-3">
+            <div className="flex rounded-md border border-gray-300 overflow-hidden  w-1/2 max-w-md font-[sans-serif]">
+                    <input ref={inputRef} type="text" placeholder="Buscar producto..."
                 className="w-full outline-none border-none text-gray-600 text-sm px-3 py-2" />
                 <button onClick={getValueSearch} type='button' className="flex items-center justify-center bg-[#007bff] px-5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" width="16px" className="fill-white">
@@ -104,9 +131,26 @@ export default function Home() {
                     </path>
                 </svg>
                 </button>
+                
             </div>
-            <Link href="/inventario/nuevoProducto">
-                <button className="items-center justify-center bg-[#007bff] px-5 py-2 text-sm text-white rounded-md">Agregar producto</button>
+            
+            <select
+                    value={idCategoria}
+                    onChange={(e) => setIdCategoria(e.target.value)}
+                    className="w-min bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer">
+                    <option value="">Categoría</option>
+                    {loading ? (
+                        <option>Cargando...</option>
+                    ) : (
+                        dataCategoria.map((categoria) => (
+                            <option key={categoria.idCategoria} value={categoria.idCategoria}>
+                                {categoria.nombre}
+                            </option>
+                        ))
+                    )}
+                </select>
+            <Link href="/inventario/nuevoProducto" className="ms-auto">
+                <button className="items-center justify-center bg-[#007bff] px-5 py-2 text-nowrap text-sm text-white rounded-md">Agregar producto</button>
             </Link>
         </div>
         <ul>

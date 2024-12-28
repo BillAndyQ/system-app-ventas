@@ -1,8 +1,16 @@
 "use client"
 import { jsPDF } from "jspdf";
-import { useState } from "react";
+import { useEffect, useState, useRef  } from "react";
+import axios from "axios";
+        
 
 export default function Home() {
+    const inputRef = useRef(null);
+    const [search, setSearch] = useState('');
+    const [error, setError] = useState('');
+    const [data, setData] = useState([]);
+  const [dataCategoria, setDataCategoria] = useState([]);
+
     
     const generarPDF = () => {
         const doc = new jsPDF();
@@ -12,19 +20,56 @@ export default function Home() {
         doc.save("ejemplo.pdf"); // Esto descarga el PDF
     };
 
+    const getValueSearch = () => {
+        setSearch(inputRef.current.value);
+    }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if(!search) return;
+          try {
+            const response = await axios.get(`/api/producto/search?search=${search}` ,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                }
+              }
+            );
+            setData(response.data);
+            console.log(response.data);
+            
+          } catch (err) {
+            setError('Error al obtener los datos');
+          }
+        };
+  
+        fetchData();
+      }, [search]);
+
 
   return (
     <div className="relative h-[calc(100vh-5rem)]">
-        <div className="flex rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
-            <input type="email" placeholder="Buscar producto..."
+        <div className="flex relative rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
+
+            <input ref={inputRef} type="text" placeholder="Buscar producto..."
             className="w-full border-none outline-none bg-white text-gray-600 text-sm px-3 py-2" />
-            <button type='button' className="flex items-center justify-center bg-[#007bff] px-5">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" width="16px" className="fill-white">
-                <path
-                d="m190.707 180.101-47.078-47.077c11.702-14.072 18.752-32.142 18.752-51.831C162.381 36.423 125.959 0 81.191 0 36.422 0 0 36.423 0 81.193c0 44.767 36.422 81.187 81.191 81.187 19.688 0 37.759-7.049 51.831-18.751l47.079 47.078a7.474 7.474 0 0 0 5.303 2.197 7.498 7.498 0 0 0 5.303-12.803zM15 81.193C15 44.694 44.693 15 81.191 15c36.497 0 66.189 29.694 66.189 66.193 0 36.496-29.692 66.187-66.189 66.187C44.693 147.38 15 117.689 15 81.193z">
-                </path>
-            </svg>
-            </button>
+
+            <button onClick={getValueSearch} type='button' className="flex items-center justify-center bg-[#007bff] px-5">
+
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" width="16px" className="fill-white">
+                    <path
+                    d="m190.707 180.101-47.078-47.077c11.702-14.072 18.752-32.142 18.752-51.831C162.381 36.423 125.959 0 81.191 0 36.422 0 0 36.423 0 81.193c0 44.767 36.422 81.187 81.191 81.187 19.688 0 37.759-7.049 51.831-18.751l47.079 47.078a7.474 7.474 0 0 0 5.303 2.197 7.498 7.498 0 0 0 5.303-12.803zM15 81.193C15 44.694 44.693 15 81.191 15c36.497 0 66.189 29.694 66.189 66.193 0 36.496-29.692 66.187-66.189 66.187C44.693 147.38 15 117.689 15 81.193z">
+                    </path>
+                </svg>
+            </button> 
+        </div>
+        <div className="relative mx-3">
+            <div className="absolute bg-white w-full max-w-md z-20 h-30 left-0 top-[0.1rem] shadow-md overflow-y-auto border top-4 border-gray-300">
+                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
+                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
+                <div className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">resultado 1</div>
+            </div>
         </div>
         {/* Tabla  */}
         <div className="font-[sans-serif] overflow-x-auto my-3 mx-3 overflow-y-auto h-[calc(100vh-19rem)]">
