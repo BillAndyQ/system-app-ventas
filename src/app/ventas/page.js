@@ -1,11 +1,12 @@
 "use client"
 import { jsPDF } from "jspdf";
-import { useEffect, useState, useRef  } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import debounce from 'lodash.debounce';
 
 export default function Home() {
     const inputRef = useRef(null);
+    const resultsRef = useRef(null);
     const [search, setSearch] = useState('');
     const [error, setError] = useState('');
     const [data, setData] = useState([]);
@@ -15,21 +16,44 @@ export default function Home() {
     const [nombre, setNombre] = useState('');
     const [selectValue, setSelectValue] = useState('');
     const [showResults, setShowResults] = useState(false);
-    const resultsRef = useRef(null);
-    
+    const [tableData, setTableData] = useState([]);
 
-    const generarPDF = () => {
+    const generarPDF = useCallback(() => {
         const doc = new jsPDF();
         doc.text("Hola, este es un PDF generado con jsPDF", 10, 10);
         doc.text("Hola, este es un PDF generado con jsPDF", 10, 20);
         doc.text("Hola, este es un PDF generado con jsPDF", 10, 30);
         doc.save("ejemplo.pdf"); // Esto descarga el PDF
-    };
+    }, []);
 
-    const getValueSearch = () => {
+    const getValueSearch = useCallback(() => {
         setSearch(inputRef.current.value);
         setShowResults(true);
-    }
+    }, []);
+
+    const handleResultClick = useCallback((item) => {
+        setShowResults(false);
+        setTableData((prevData) => {
+            const existingItem = prevData.find(dataItem => dataItem.idProducto === item.idProducto);
+            if (existingItem) {
+                return prevData.map(dataItem =>
+                    dataItem.idProducto === item.idProducto
+                        ? { ...dataItem, cantidad: dataItem.cantidad + 1 }
+                        : dataItem
+                );
+            } else {
+                return [...prevData, { ...item, cantidad: 1 }];
+            }
+        });
+    }, []);
+
+    const handleCantidadChange = (idProducto, newCantidad) => {
+        setTableData((prevData) =>
+            prevData.map((item) =>
+                item.idProducto === idProducto ? { ...item, cantidad: newCantidad } : item
+            )
+        );
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -159,7 +183,7 @@ export default function Home() {
                         className="absolute bg-white w-full max-w-md z-20 h-30 left-0 top-[0.1rem] shadow-md overflow-y-auto border top-4 border-gray-300"
                     >
                         {data.map((item, index) => (
-                            <div key={index} className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1">
+                            <div key={index} className="text-sm hover:bg-gray-100 cursor-pointer px-2 py-1" onClick={() => handleResultClick(item)}>
                                 {item.nombre}
                             </div>
                         ))}
@@ -168,68 +192,61 @@ export default function Home() {
         </div>
         {/* Tabla  */}
         <div className="font-[sans-serif] overflow-x-auto my-3 mx-3 overflow-y-auto h-[calc(100vh-19rem)]">
-            <table className="min-w-full bg-white border">
-                <thead className="bg-gray-800 whitespace-nowrap sticky top-0">
-                <tr>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-white">
-                    Código
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-white">
-                    Producto
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-white">
-                    Precio
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-white">
-                    Cantidad
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-white">
-                    Total
-                    </th>
-                    <th className="py-3 text-right text-sm font-medium text-white">
-                    </th>
-                </tr>
-                </thead>
-                <tbody className="whitespace-nowrap">
-                <tr className="even:bg-blue-50">
-                    <td className="p-4 text-sm text-black">
-                    John Doess
-                    </td>
-                    <td className="p-4 text-sm text-black">
-                    john@example.com
-                    </td>
-                    <td className="p-4 text-sm text-black">
-                    Admin
-                    </td>
-                    <td className="p-4 text-sm text-black">
-                    2022-05-15
-                    </td>
-                    <td className="text-center">100</td>
-                    <td className="py-4 px-2 text-right">
-                        <button className="mr-4" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 fill-blue-500 hover:fill-blue-700"
-                            viewBox="0 0 348.882 348.882">
-                            <path
-                                d="m333.988 11.758-.42-.383A43.363 43.363 0 0 0 304.258 0a43.579 43.579 0 0 0-32.104 14.153L116.803 184.231a14.993 14.993 0 0 0-3.154 5.37l-18.267 54.762c-2.112 6.331-1.052 13.333 2.835 18.729 3.918 5.438 10.23 8.685 16.886 8.685h.001c2.879 0 5.693-.592 8.362-1.76l52.89-23.138a14.985 14.985 0 0 0 5.063-3.626L336.771 73.176c16.166-17.697 14.919-45.247-2.783-61.418zM130.381 234.247l10.719-32.134.904-.99 20.316 18.556-.904.99-31.035 13.578zm184.24-181.304L182.553 197.53l-20.316-18.556L294.305 34.386c2.583-2.828 6.118-4.386 9.954-4.386 3.365 0 6.588 1.252 9.082 3.53l.419.383c5.484 5.009 5.87 13.546.861 19.03z"
-                                data-original="#000000" />
-                            <path
-                                d="M303.85 138.388c-8.284 0-15 6.716-15 15v127.347c0 21.034-17.113 38.147-38.147 38.147H68.904c-21.035 0-38.147-17.113-38.147-38.147V100.413c0-21.034 17.113-38.147 38.147-38.147h131.587c8.284 0 15-6.716 15-15s-6.716-15-15-15H68.904C31.327 32.266.757 62.837.757 100.413v180.321c0 37.576 30.571 68.147 68.147 68.147h181.798c37.576 0 68.147-30.571 68.147-68.147V153.388c.001-8.284-6.715-15-14.999-15z"
-                                data-original="#000000" />
-                            </svg>
-                        </button>
-                        <button className="mr-4" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 fill-red-500 hover:fill-red-700" viewBox="0 0 24 24">
-                            <path
-                                d="M19 7a1 1 0 0 0-1 1v11.191A1.92 1.92 0 0 1 15.99 21H8.01A1.92 1.92 0 0 1 6 19.191V8a1 1 0 0 0-2 0v11.191A3.918 3.918 0 0 0 8.01 23h7.98A3.918 3.918 0 0 0 20 19.191V8a1 1 0 0 0-1-1Zm1-3h-4V2a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v2H4a1 1 0 0 0 0 2h16a1 1 0 0 0 0-2ZM10 4V3h4v1Z"
-                                data-original="#000000" />
-                            <path d="M11 17v-7a1 1 0 0 0-2 0v7a1 1 0 0 0 2 0Zm4 0v-7a1 1 0 0 0-2 0v7a1 1 0 0 0 2 0Z"
-                                data-original="#000000" />
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+        <div className="flex flex-col">
+            <div className="overflow-x-auto">
+                <div className=" min-w-full inline-block align-middle">
+                <div className="border rounded-md overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-900">
+                        <tr className="">
+                        <th scope="col" className="w-4 p-2">
+                            <div className="flex items-center h-2 justify-center">
+                                <input id="hs-table-checkbox-all" type="checkbox" className="border-gray-200 h-4 w-4 text-xs rounded text-blue-600 focus:ring-blue-500"/>
+                                <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
+                            </div>
+                        </th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Código</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Nombre del producto</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Precio U.</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Cantidad</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Importe</th>
+                            <th scope="col" className="px-2 py-2 pe-4 text-end text-[.74rem] font-medium text-white">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {tableData.map((item, index) => (
+                        <tr key={index}>
+                            <td className="w-4 px-2">
+                                <div className="flex items-center h-1 justify-center">
+                                    <input id="hs-table-checkbox-all" type="checkbox" className="border-gray-200 text-xs h-4 w-4 rounded text-blue-600 focus:ring-blue-500"/>
+                                    <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
+                                </div>
+                            </td>
+                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">{item.idProducto}</td>
+                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.nombre}</td>
+                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.precio}</td>
+                            <td className="border-x w-20 text-gray-800">
+                                <input 
+                                    type="number" 
+                                    value={item.cantidad} 
+                                    onChange={(e) => handleCantidadChange(item.idProducto, parseInt(e.target.value))} 
+                                    className="border-none px-2 py-1 text-[.8rem] w-20" 
+                                    min={1}
+                                />
+                            </td>
+                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">1000</td>
+
+                            <td className="px-2 whitespace-nowrap text-end text-sm font-medium">
+                                <button type="button" className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800 disabled:opacity-50 disabled:pointer-events-none">Delete</button>
+                            </td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
         </div>
         <div className="border-t px-4 py-3 bg-white w-full bottom-0 flex gap-2 h-40 absolute">
             <div className="space-y-2">

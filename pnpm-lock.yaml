@@ -836,7 +836,7 @@ packages:
   eslint@8.57.1:
     resolution: {integrity: sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support htmlFor other options.
     hasBin: true
 
   espree@9.6.1:
@@ -923,7 +923,7 @@ packages:
       debug:
         optional: true
 
-  for-each@0.3.3:
+  htmlFor-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
 
   foreground-child@3.3.0:
@@ -2896,7 +2896,7 @@ snapshots:
 
   follow-redirects@1.15.9: {}
 
-  for-each@0.3.3:
+  htmlFor-each@0.3.3:
     dependencies:
       is-callable: 1.2.7
 
@@ -3824,7 +3824,7 @@ snapshots:
   typed-array-byte-length@1.0.1:
     dependencies:
       call-bind: 1.0.8
-      for-each: 0.3.3
+      htmlFor-each: 0.3.3
       gopd: 1.2.0
       has-proto: 1.2.0
       is-typed-array: 1.1.13
@@ -3833,7 +3833,7 @@ snapshots:
     dependencies:
       available-typed-arrays: 1.0.7
       call-bind: 1.0.8
-      for-each: 0.3.3
+      htmlFor-each: 0.3.3
       gopd: 1.2.0
       has-proto: 1.2.0
       is-typed-array: 1.1.13
@@ -3842,7 +3842,7 @@ snapshots:
   typed-array-length@1.0.7:
     dependencies:
       call-bind: 1.0.8
-      for-each: 0.3.3
+      htmlFor-each: 0.3.3
       gopd: 1.2.0
       is-typed-array: 1.1.13
       possible-typed-array-names: 1.0.0
@@ -3905,7 +3905,7 @@ snapshots:
     dependencies:
       available-typed-arrays: 1.0.7
       call-bind: 1.0.8
-      for-each: 0.3.3
+      htmlFor-each: 0.3.3
       gopd: 1.2.0
       has-tostringtag: 1.0.2
 
