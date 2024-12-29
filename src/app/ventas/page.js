@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import debounce from 'lodash.debounce';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Home() {
     const inputRef = useRef(null);
@@ -18,6 +19,9 @@ export default function Home() {
     const [selectValue, setSelectValue] = useState('');
     const [showResults, setShowResults] = useState(false);
     const [tableData, setTableData] = useState([]);
+    const [Subtotal, setSubtotal] = useState(0);
+    const [IGV, setIGV] = useState(0);
+    const [total, setTotal] = useState(0);
 
     const generarPDF = useCallback(() => {
         const doc = new jsPDF();
@@ -26,10 +30,10 @@ export default function Home() {
         doc.text("Hola, este es un PDF generado con jsPDF", 10, 30);
         doc.save("ejemplo.pdf"); // Esto descarga el PDF
     }, []);
-
+    
     const getValueSearch = useCallback(() => {
         const currentValue = inputRef.current.value.trim();
-        if (currentValue.length >= 2 && currentValue !== lastSearch) { // Verificar si el valor tiene al menos  caracteres y ha cambiado
+        if (currentValue.length >= 3 && currentValue !== lastSearch) { // Verificar si el valor tiene al menos 3 caracteres y ha cambiado
             setSearch(currentValue);
             setLastSearch(currentValue); // Actualizar la última búsqueda
             setShowResults(true);
@@ -40,26 +44,60 @@ export default function Home() {
         setShowResults(false);
         setTableData((prevData) => {
             const existingItem = prevData.find(dataItem => dataItem.idProducto === item.idProducto);
+            let newData;
             if (existingItem) {
-                return prevData.map(dataItem =>
+                newData = prevData.map(dataItem =>
                     dataItem.idProducto === item.idProducto
                         ? { ...dataItem, cantidad: dataItem.cantidad + 1, importe: (dataItem.cantidad + 1) * dataItem.precio }
                         : dataItem
                 );
             } else {
-                return [...prevData, { ...item, cantidad: 1, importe: item.precio }];
+                newData = [...prevData.filter(dataItem => !dataItem.editable), { ...item, idFile: uuidv4(), cantidad: 1, importe: item.precio }, ...prevData.filter(dataItem => dataItem.editable)];
             }
+
+            // Ensure the editable row is at the end
+            if (!newData.some(item => item.editable)) {
+                newData.push({ idFile: uuidv4(), codigo: '', nombre: '', precio: '', cantidad: '', importe: '', editable: true });
+            }
+
+            return newData;
         });
     }, []);
 
-    const handleCantidadChange = (idProducto, newCantidad) => {
-        setTableData((prevData) =>
-            prevData.map((item) =>
-                item.idProducto === idProducto ? { ...item, cantidad: newCantidad, importe: newCantidad * item.precio } : item
-            )
-        );
+    const handleRowChange = (index, field, value) => {
+        setTableData((prevData) => {
+            const newData = [...prevData];
+            newData[index] = { 
+                ...newData[index], 
+                [field]: value,
+            };
+            if (field === 'precio' || field === 'cantidad') {
+                const precio = field === 'precio' ? value : newData[index].precio;
+                const cantidad = field === 'cantidad' ? value : newData[index].cantidad;
+                newData[index].importe = (precio * cantidad).toFixed(2);
+            }
+    
+            // Check if all required fields are filled
+            const { nombre, precio, cantidad, importe } = newData[index];
+            if (nombre && precio && cantidad && importe && !newData.some(item => item.editable && !item.nombre && !item.precio && !item.cantidad && !item.importe)) {
+                newData.push({ idFile: uuidv4(), codigo: '', nombre: '', precio: '', cantidad: '', importe: '', editable: true });
+            }
+    
+            return newData.filter(item => !item.editable).concat(newData.filter(item => item.editable));
+        });
     };
+    
+    const ensureEditableRow = () => {
+        if (!tableData.some(item => item.editable)) {
+            setTableData([...tableData.filter(item => !item.editable), { idFile: uuidv4(), codigo: '', nombre: '', precio: '', cantidad: '', importe: '', editable: true }]);
+        }
+    };
+    
+    useEffect(() => {
+        ensureEditableRow();
+    }, [tableData]);
 
+    // Efecto del cuadro de resultado de busqueda
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
@@ -153,6 +191,12 @@ export default function Home() {
         };
     }, [debouncedFetchData]);
 
+    // Calcular el total cada vez que tableData cambie
+    useEffect(() => {
+        const newTotal = tableData.reduce((acc, item) => acc + parseFloat(item.importe || 0), 0);
+        setTotal(newTotal.toFixed(2));
+    }, [tableData]);
+
   return (
     <div className="relative h-[calc(100vh-5rem)]">
         <div className="flex relative rounded-md border overflow-hidden mx-3 max-w-md font-[sans-serif]">
@@ -211,7 +255,7 @@ export default function Home() {
                             </div>
                         </th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Código</th>
-                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Descripción</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Nombre del producto</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Precio U.</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Cantidad</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Importe</th>
@@ -220,82 +264,58 @@ export default function Home() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {tableData.map((item, index) => (
-                        <tr key={index}>
-                            <td className="w-4 px-2">
-                                <div className="flex items-center h-1 justify-center">
-                                    <input id="hs-table-checkbox-all" type="checkbox" className="border-gray-200 text-xs h-4 w-4 rounded text-blue-600 focus:ring-blue-500"/>
-                                    <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
-                                </div>
-                            </td>
-                            <td className="px-2 border-x w-fit whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">{item.idProducto}</td>
-                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.nombre}</td>
-                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.precio}</td>
-                            <td className="border-x w-20 text-gray-800">
-                                <input 
-                                    type="number" 
-                                    value={item.cantidad} 
-                                    onChange={(e) => handleCantidadChange(item.idProducto, parseInt(e.target.value))} 
-                                    className="border-none px-2 py-1 text-[.8rem] w-20" 
-                                    min={1}
-                                />
-                            </td>
-                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.importe}</td>
-
-                            <td className="px-2 whitespace-nowrap text-end text-sm w-10 font-medium">
-                                <button className="cursor-pointer text-gray-500 hover:text-red-700 p-[0px] mt-1" onClick={() => setTableData((prevData) => prevData.filter((dataItem) => dataItem.idProducto !== item.idProducto))}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15zm2-2h10V6H7zm2-2h2V8H9zm4 0h2V8h-2zM7 6v13z"/></svg>
-                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=delete" />
-                                </button>
-                            </td>
-                        </tr>
+                            <tr key={item.idFile}>
+                                <td className="w-4 px-2">
+                                    <div className="flex items-center h-1 justify-center">
+                                        <input id={`hs-table-checkbox-${item.idFile}`} type="checkbox" className="border-gray-200 text-xs h-4 w-4 rounded text-blue-600 focus:ring-blue-500"/>
+                                        <label htmlFor={`hs-table-checkbox-${item.idFile}`} className="sr-only">Checkbox</label>
+                                    </div>
+                                </td>
+                                <td className="border-x w-40 whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">
+                                    {item.idProducto}
+                                </td>
+                                <td className="border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">
+                                    {item.editable ? (
+                                        <input 
+                                            type="text" 
+                                            className="border-none px-2 py-1 text-[.8rem] w-full" 
+                                            value={item.nombre}
+                                            onChange={(e) => handleRowChange(index, 'nombre', e.target.value)}
+                                        />
+                                    ) : (
+                                        item.nombre
+                                    )}
+                                </td>
+                                <td className="border-x w-28 whitespace-nowrap text-start text-[.8rem] text-gray-800">
+                                    {item.editable ? (
+                                        <input 
+                                            type="number" 
+                                            className="border-none px-2 py-1 text-[.8rem] w-full" 
+                                            value={item.precio}
+                                            onChange={(e) => handleRowChange(index, 'precio', e.target.value)}
+                                        />
+                                    ) : (
+                                        item.precio
+                                    )}
+                                </td>
+                                <td className="border-x w-20 text-gray-800">
+                                    <input 
+                                        type="number" 
+                                        className="border-none px-2 py-1 text-[.8rem] w-20" 
+                                        value={item.cantidad}
+                                        onChange={(e) => handleRowChange(index, 'cantidad', e.target.value)}
+                                    />
+                                </td>
+                                <td className="px-2 w-28 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.importe}</td>
+                                <td className="px-2 whitespace-nowrap text-end text-sm w-10 font-medium">
+                                    <button className="cursor-pointer text-gray-500 hover:text-red-700 p-[0px] mt-1" onClick={() => setTableData((prevData) => prevData.filter((dataItem) => dataItem.idFile !== item.idFile))}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15zm2-2h10V6H7zm2-2h2V8H9zm4 0h2V8h-2zM7 6v13z"/></svg>
+                                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=delete" />
+                                    </button>
+                                </td>
+                            </tr>
                         ))}
-                        <tr>
-                            <td className="w-4 px-2">
-                                <div className="flex items-center h-1 justify-center">
-                                    <input id="hs-table-checkbox-all" type="checkbox" className="border-gray-200 text-xs h-4 w-4 rounded text-blue-600 focus:ring-blue-500"/>
-                                    <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
-                                </div>
-                            </td>
-                            <td className="border-x w-40 whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">
-                                <input 
-                                    type="text" 
-                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
-                                    min={1}
-                                    placeholder="Código"
-                                />
-                            </td>
-                            <td className="border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">
-                                <input 
-                                    type="text" 
-                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
-                                    min={1}
-                                    placeholder="Descripción"
-                                />
-                            </td>
-                            <td className="border-x w-28 whitespace-nowrap text-start text-[.8rem] text-gray-800">
-                                <input 
-                                    type="number" 
-                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
-                                    min={1}
-                                    placeholder="Precio"
-                                />
-                            </td>
-                            <td className="border-x w-20 text-gray-800">
-                                <input 
-                                    type="number" 
-                                    className="border-none px-2 py-1 text-[.8rem] w-20" 
-                                    min={1}
-                                />
-                            </td>
-                            <td className="px-2 w-28 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800"></td>
-
-                            <td className="px-2 whitespace-nowrap text-end text-sm w-10 font-medium">
-                                <button className="cursor-pointer text-gray-500 hover:text-red-700 p-[0px] mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15zm2-2h10V6H7zm2-2h2V8H9zm4 0h2V8h-2zM7 6v13z"/></svg>
-                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=delete" />
-                                </button>
-                            </td>
-                        </tr>
+                        
                     </tbody>
                     </table>
                 </div>
@@ -340,9 +360,22 @@ export default function Home() {
                 </select><br/>
             </div>
             <div className="ms-auto">
-                <p className="font-bold">IGV</p>
-                <p className="font-bold">Subtotal</p>
-                <p className="font-bold">Total</p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td className="w-20">Subtotal</td>
+                            <td className="text-end">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>IGV</td>
+                            <td className="text-end">0.00</td>
+                        </tr>
+                        <tr className="font-bold">
+                            <td>Total</td>
+                            <td><span>{total}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <button onClick={generarPDF} className="bg-blue-500 mt-3 text-white px-4 py-3 text-md">Realizar operación</button>
             </div>
         </div>
