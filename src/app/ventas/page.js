@@ -211,7 +211,7 @@ export default function Home() {
                             </div>
                         </th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Código</th>
-                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Nombre del producto</th>
+                            <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Descripción</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Precio U.</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Cantidad</th>
                             <th scope="col" className="px-2 border-x border-gray-500 py-2 text-start text-[.79rem] font-medium text-white">Importe</th>
@@ -227,7 +227,7 @@ export default function Home() {
                                     <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
                                 </div>
                             </td>
-                            <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">{item.idProducto}</td>
+                            <td className="px-2 border-x w-fit whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">{item.idProducto}</td>
                             <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.nombre}</td>
                             <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.precio}</td>
                             <td className="border-x w-20 text-gray-800">
@@ -241,11 +241,61 @@ export default function Home() {
                             </td>
                             <td className="px-2 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">{item.importe}</td>
 
-                            <td className="px-2 whitespace-nowrap text-end text-sm font-medium">
-                                <button type="button" className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800 disabled:opacity-50 disabled:pointer-events-none">Delete</button>
+                            <td className="px-2 whitespace-nowrap text-end text-sm w-10 font-medium">
+                                <button className="cursor-pointer text-gray-500 hover:text-red-700 p-[0px] mt-1" onClick={() => setTableData((prevData) => prevData.filter((dataItem) => dataItem.idProducto !== item.idProducto))}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15zm2-2h10V6H7zm2-2h2V8H9zm4 0h2V8h-2zM7 6v13z"/></svg>
+                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=delete" />
+                                </button>
                             </td>
                         </tr>
                         ))}
+                        <tr>
+                            <td className="w-4 px-2">
+                                <div className="flex items-center h-1 justify-center">
+                                    <input id="hs-table-checkbox-all" type="checkbox" className="border-gray-200 text-xs h-4 w-4 rounded text-blue-600 focus:ring-blue-500"/>
+                                    <label htmlFor="hs-table-checkbox-all" className="sr-only">Checkbox</label>
+                                </div>
+                            </td>
+                            <td className="border-x w-40 whitespace-nowrap text-start text-[.8rem] font-medium text-gray-800">
+                                <input 
+                                    type="text" 
+                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
+                                    min={1}
+                                    placeholder="Código"
+                                />
+                            </td>
+                            <td className="border-x whitespace-nowrap text-start text-[.8rem] text-gray-800">
+                                <input 
+                                    type="text" 
+                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
+                                    min={1}
+                                    placeholder="Descripción"
+                                />
+                            </td>
+                            <td className="border-x w-28 whitespace-nowrap text-start text-[.8rem] text-gray-800">
+                                <input 
+                                    type="number" 
+                                    className="border-none px-2 py-1 text-[.8rem] w-full" 
+                                    min={1}
+                                    placeholder="Precio"
+                                />
+                            </td>
+                            <td className="border-x w-20 text-gray-800">
+                                <input 
+                                    type="number" 
+                                    className="border-none px-2 py-1 text-[.8rem] w-20" 
+                                    min={1}
+                                />
+                            </td>
+                            <td className="px-2 w-28 border-x whitespace-nowrap text-start text-[.8rem] text-gray-800"></td>
+
+                            <td className="px-2 whitespace-nowrap text-end text-sm w-10 font-medium">
+                                <button className="cursor-pointer text-gray-500 hover:text-red-700 p-[0px] mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15zm2-2h10V6H7zm2-2h2V8H9zm4 0h2V8h-2zM7 6v13z"/></svg>
+                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=delete" />
+                                </button>
+                            </td>
+                        </tr>
                     </tbody>
                     </table>
                 </div>
@@ -257,8 +307,9 @@ export default function Home() {
             <div className="space-y-2">
                 <p className="font-bold text-black">Cliente</p>
                 <input
-                        className="border border-gray-300 w-[21rem] rounded px-2 text-sm py-1"
-                        type="text"
+                        // que no salga su boton de aumentar y disminuir
+                        className="border border-gray-300 w-[21rem] rounded px-2 text-sm py-1 appearance-none"
+                        type="number"
                         placeholder="DNI / RUC"
                         value={dniRuc}
                         onChange={handleDniRucChange}
@@ -278,8 +329,8 @@ export default function Home() {
                 <select value={selectValue} onChange={(e) => setSelectValue(e.target.value)}
                     className="bg-transparent placeholder:text-slate-400 text-slate-700 w-[10rem] text-sm border border-gray-300 rounded px-2 py-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer"
                     >
-                    <option value="factura">Factura</option>
                     <option value="boleta">Boleta</option>
+                    <option value="factura">Factura</option>
                 </select>
                 <br/>
                 <select
